@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@import "tailwindcss-safe-area";
+
+@theme {
+  --text-xs: 12px; --text-xs--line-height: 16px;
+  --text-sm: 14px; --text-sm--line-height: 20px;
+  --text-base: 16px; --text-base--line-height: 24px;
+  --text-lg: 18px; --text-lg--line-height: 28px;
+  --text-xl: 20px; --text-xl--line-height: 28px;
+  --text-2xl: 24px; --text-2xl--line-height: 32px;
+  --text-3xl: 30px; --text-3xl--line-height: 36px;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #07070b;
+  --surface: #101018;
+  --surface2: #17171f;
+  --text: #f5efe0;
+  --dim: #a49a83;
+  --border: #2b2b38;
+  --accent: #c9a227;
+  --accent2: #f0d47a;
+  --danger: #e07a7a;
+  --good: #7fd08c;
+  --radius: 14px;
+  --space-surface: var(--surface);
+  --space-surface-alt: var(--surface2);
+  --space-muted: var(--dim);
+  --space-border: var(--border);
+  --space-accent: var(--accent);
+}
+@layer base {
+  button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
+  body { background: var(--bg); }
+}
+.felt { background: radial-gradient(120% 90% at 50% 0%, #1a1a26 0%, #0b0b12 55%, #07070b 100%); }
+.gold-text { color: var(--accent2); }
+.glass { background: rgba(255,255,255,0.045); border: 1px solid rgba(240,212,122,0.22); backdrop-filter: blur(14px); border-radius: var(--radius); }
+@keyframes dealIn { from { opacity: 0; transform: translateY(-14px) rotate(-4deg) scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes popIn { 0% { transform: scale(.6); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes spinWheel { from { transform: rotate(0deg); } to { transform: rotate(1440deg); } }
+.deal-in { animation: dealIn .45s cubic-bezier(.2,.9,.3,1.2) both; }
+.pop-in { animation: popIn .35s ease both; }
+.wheel-spin { animation: spinWheel 2.4s cubic-bezier(.15,.8,.25,1) both; }
+.chip { box-shadow: inset 0 0 0 3px rgba(255,255,255,.35), 0 2px 6px rgba(0,0,0,.5); }
+.playing-card { background: linear-gradient(145deg, #fffdf5, #efe8d2); color: #1c1c22; border-radius: 10px; box-shadow: 0 6px 16px rgba(0,0,0,.45); }
+@media (prefers-reduced-motion: reduce) { .deal-in, .pop-in, .wheel-spin { animation: none; } }

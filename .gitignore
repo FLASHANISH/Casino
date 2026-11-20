@@ -1,0 +1,9 @@
+.gitignore
+node_modules/
+app.db*
+audits/
+client/dist/
+client/dist-cvm/
+server/dist/
+.bun-cache/
+*.tsbuildinfo
