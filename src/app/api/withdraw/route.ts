@@ -15,6 +15,16 @@ export async function POST(req: Request) {
   const args = parsed.data;
   const me = await currentPlayer();
   if (!me) return err("Please log in first.", 401);
+  const userCurrency = me.currency || "USD";
+
+  // UPI is available only for INR wallets; everyone else uses USDT.
+  if (args.method === "UPI" && userCurrency !== "INR") {
+    return err(
+      `UPI withdraws are available only for INR wallets. Your wallet currency is ${userCurrency} — please withdraw via USDT.`,
+    );
+  }
+  const requestCurrency = args.method === "USDT" ? "USDT" : userCurrency;
+
   if (me.kycStatus.includes("pending")) {
     return err(
       "KYC verification required before withdraw. Verify your email in Profile first - withdraw unlocks once KYC shows verified.",
@@ -40,7 +50,7 @@ export async function POST(req: Request) {
         kind: "withdraw",
         method: args.method,
         amount: args.amount,
-        currency: args.method === "USDT" ? "USDT" : "USD",
+        currency: requestCurrency,
         destination: args.destination,
         status: "pending",
       },
@@ -50,7 +60,7 @@ export async function POST(req: Request) {
         userId: me.id,
         type: "withdraw-request",
         amount: 0,
-        currency: args.method === "USDT" ? "USDT" : "USD",
+        currency: requestCurrency,
         note: `Withdraw request via ${args.method} to ${args.destination} - balance debits only on approval`,
       },
     }),

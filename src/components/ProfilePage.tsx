@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, credits, loadState, referralLink, type AppState } from "@/lib/client";
+import { api, loadState, referralLink, type AppState } from "@/lib/client";
+import { countryByCode, formatMoney } from "@/lib/countries";
 
 export function ProfilePage() {
   const router = useRouter();
@@ -44,9 +45,16 @@ export function ProfilePage() {
       <section className="glass p-5">
         <h1 className="font-serif text-3xl">{user.name}</h1>
         <p className="mt-1 text-sm text-[var(--dim)]">
-          {user.email} · {user.role} · Balance {credits(user.balance)}
+          {user.email} · {user.role} · Balance {formatMoney(user.balance, user.currency)}
         </p>
         <p className="mt-1 text-sm text-[var(--dim)]">KYC status: {user.kycStatus}</p>
+        <p className="mt-1 text-sm text-[var(--dim)]">
+          Country: {countryByCode(user.country)?.name ?? (user.country || "—")}
+        </p>
+        <p className="mt-1 text-sm text-[var(--dim)]">
+          Wallet currency: <strong className="gold-text">{user.currency}</strong> — set at
+          signup and cannot be changed afterwards.
+        </p>
         <p className="mt-1 text-sm text-[var(--dim)]">
           Referral code: <strong className="gold-text">{user.referralCode}</strong>
         </p>

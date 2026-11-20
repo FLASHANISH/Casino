@@ -1,6 +1,7 @@
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { currentPlayer } from "@/lib/auth";
+import { formatMoney } from "@/lib/countries";
 import { err, json, parseBody } from "@/lib/api-helpers";
 
 const schema = z.object({
@@ -16,6 +17,15 @@ export async function POST(req: Request) {
   const args = parsed.data;
   const me = await currentPlayer();
   if (!me) return err("Please log in first.", 401);
+  const userCurrency = me.currency || "USD";
+
+  // UPI is available only for INR wallets; everyone else uses USDT.
+  if (args.method === "UPI" && userCurrency !== "INR") {
+    return err(
+      `UPI deposits are available only for INR wallets. Your wallet currency is ${userCurrency} — please deposit via USDT.`,
+    );
+  }
+  const requestCurrency = args.method === "USDT" ? "USDT" : userCurrency;
 
   if (me.depositLimit > 0) {
     const todayStart = new Date();
@@ -28,7 +38,7 @@ export async function POST(req: Request) {
       .reduce((a, r) => a + r.amount, 0);
     if (todayDep + args.amount > me.depositLimit) {
       return err(
-        `This deposit would cross your daily deposit limit of $${me.depositLimit}. Lower the amount or raise the limit in your Wallet.`,
+        `This deposit would cross your daily deposit limit of ${formatMoney(me.depositLimit, userCurrency)}. Lower the amount or raise the limit in your Wallet.`,
       );
     }
   }
@@ -40,7 +50,7 @@ export async function POST(req: Request) {
         kind: "deposit",
         method: args.method,
         amount: args.amount,
-        currency: args.method === "USDT" ? "USDT" : "USD",
+        currency: requestCurrency,
         ref: args.ref,
         screenshotRef: args.screenshotRef ?? "",
         status: "pending",
@@ -51,7 +61,7 @@ export async function POST(req: Request) {
         userId: me.id,
         type: "deposit-request",
         amount: 0,
-        currency: args.method === "USDT" ? "USDT" : "USD",
+        currency: requestCurrency,
         note: `Deposit request via ${args.method} - UTR/Tx: ${args.ref} - awaiting verification`,
       },
     }),

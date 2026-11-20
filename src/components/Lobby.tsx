@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, loadState, type AppState, type Game } from "@/lib/client";
 import { CATEGORIES } from "@/lib/catalog";
+import { formatMoney } from "@/lib/countries";
 import { Thumb } from "./GameArt";
 
 function Chip({ amount, color }: { amount: string; color: string }) {
@@ -245,7 +246,10 @@ export function Lobby() {
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               {[
                 ["Real-Money Deposits", "Pay by UPI or USDT, submit your UTR / tx-hash - once verified, your balance credits."],
-                ["Refer & Earn Rs 10", "Share your referral code or link - every signup with it credits Rs 10 real money to your wallet (added as 10.00 to your balance)."],
+                [
+                  `Refer & Earn ${formatMoney(10, d.user?.currency ?? "USD")}`,
+                  `Share your referral code or link - every signup with it credits ${formatMoney(10, d.user?.currency ?? "USD")} real money to your wallet (added as 10.00 to your balance).`,
+                ],
                 ["Champions Cup", "Tournament: most wins this week tops the leaderboard."],
               ].map(([h, b]) => (
                 <div key={h} className="glass p-4">

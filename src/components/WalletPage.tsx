@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api, credits, loadState, referralLink, type AppState } from "@/lib/client";
+import { api, loadState, referralLink, type AppState } from "@/lib/client";
+import { countryByCode, formatMoney } from "@/lib/countries";
 
 export function WalletPage() {
   const [d, setD] = useState<AppState | null>(null);
@@ -24,6 +25,10 @@ export function WalletPage() {
         setD(s);
         setDepLimit(String(s.user?.depositLimit ?? 0));
         setLossLimit(String(s.user?.lossLimit ?? 0));
+        if (s.user && s.user.currency !== "INR") {
+          setDepMethod("USDT");
+          setWdMethod("USDT");
+        }
       })
       .catch((e) => setErr(e.message));
   }, []);
@@ -91,27 +96,35 @@ export function WalletPage() {
   if (!d) return <p className="mt-10 text-center text-[var(--dim)]">Loading wallet...</p>;
   const user = d.user;
   if (!user) return <p className="mt-10 text-center">Please log in.</p>;
+  // UPI is available only for INR wallets; every other currency uses USDT.
+  const upiAllowed = user.currency === "INR";
+  const countryName = countryByCode(user.country)?.name ?? user.country;
 
   return (
     <div className="mt-4 space-y-6">
       <section className="glass p-5">
         <h1 className="font-serif text-3xl">Wallet — Real Money</h1>
         <p className="mt-1 text-sm text-[var(--dim)]">
-          New accounts start at $0.00. There are no bonuses of any kind — no signup, daily or
-          promo bonus anywhere in Quvanta.
+          New accounts start at {formatMoney(0, user.currency)}. There are no bonuses of
+          any kind — no signup, daily or promo bonus anywhere in Quvanta.
+        </p>
+        <p className="mt-1 text-sm text-[var(--dim)]">
+          Wallet currency: <strong className="gold-text">{user.currency}</strong>
+          {countryName ? ` (${countryName})` : ""} — deposits and withdraws are in this
+          currency{upiAllowed ? "; UPI is available for your wallet" : "; UPI is INR-only, use USDT"}.
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg border border-[var(--border)] bg-black/40 p-4">
             <p className="text-xs tracking-widest text-[var(--dim)]">TOTAL BALANCE</p>
-            <p className="font-serif text-3xl gold-text">{credits(user.balance)}</p>
+            <p className="font-serif text-3xl gold-text">{formatMoney(user.balance, user.currency)}</p>
           </div>
           <div className="rounded-lg border border-[var(--border)] bg-black/40 p-4">
             <p className="text-xs tracking-widest text-[var(--dim)]">USD</p>
-            <p className="font-serif text-2xl">{credits(user.balanceUsd)}</p>
+            <p className="font-serif text-2xl">{formatMoney(user.balanceUsd, "USD")}</p>
           </div>
           <div className="rounded-lg border border-[var(--border)] bg-black/40 p-4">
             <p className="text-xs tracking-widest text-[var(--dim)]">USDT</p>
-            <p className="font-serif text-2xl">{credits(user.balanceUsdt)}</p>
+            <p className="font-serif text-2xl">{formatMoney(user.balanceUsdt, "USDT")}</p>
           </div>
         </div>
         <p className="mt-3 text-xs text-[var(--dim)]">KYC status: {user.kycStatus}</p>
@@ -136,9 +149,11 @@ export function WalletPage() {
             balance credits only after admin approval.
           </p>
           <div className="mt-3 space-y-2 text-sm">
-            <p>
-              UPI ID: <strong className="gold-text">{d.settings["upi_id"] || "—"}</strong>
-            </p>
+            {upiAllowed && (
+              <p>
+                UPI ID: <strong className="gold-text">{d.settings["upi_id"] || "—"}</strong>
+              </p>
+            )}
             <p className="break-all">
               USDT (TRC20):{" "}
               <strong className="gold-text">{d.settings["usdt_address"] || "—"}</strong>
@@ -152,12 +167,18 @@ export function WalletPage() {
                 onChange={(e) => setDepMethod(e.target.value as "UPI" | "USDT")}
                 className="mt-1 w-full rounded-lg border border-[var(--border)] bg-black/50 px-3 py-2"
               >
-                <option value="UPI">UPI</option>
+                {upiAllowed && <option value="UPI">UPI</option>}
                 <option value="USDT">USDT</option>
               </select>
+              {!upiAllowed && (
+                <span className="mt-1 block text-xs text-[var(--dim)]">
+                  UPI is available only for INR wallets. Your wallet currency is{" "}
+                  {user.currency} — deposit via USDT.
+                </span>
+              )}
             </label>
             <label className="block text-sm">
-              Amount
+              Amount ({depMethod === "USDT" ? "USDT" : user.currency})
               <input
                 required
                 type="number"
@@ -210,12 +231,18 @@ export function WalletPage() {
                 onChange={(e) => setWdMethod(e.target.value as "UPI" | "USDT")}
                 className="mt-1 w-full rounded-lg border border-[var(--border)] bg-black/50 px-3 py-2"
               >
-                <option value="UPI">UPI</option>
+                {upiAllowed && <option value="UPI">UPI</option>}
                 <option value="USDT">USDT</option>
               </select>
+              {!upiAllowed && (
+                <span className="mt-1 block text-xs text-[var(--dim)]">
+                  UPI is available only for INR wallets. Your wallet currency is{" "}
+                  {user.currency} — withdraw via USDT.
+                </span>
+              )}
             </label>
             <label className="block text-sm">
-              Amount
+              Amount ({wdMethod === "USDT" ? "USDT" : user.currency})
               <input
                 required
                 type="number"
@@ -247,11 +274,11 @@ export function WalletPage() {
       </section>
 
       <section className="glass p-5">
-        <h2 className="font-serif text-2xl">Refer &amp; Earn — Rs 10 per referral</h2>
+        <h2 className="font-serif text-2xl">Refer &amp; Earn — {formatMoney(10, user.currency)} per referral</h2>
         <p className="mt-1 text-sm text-[var(--dim)]">
           Your referral code: <strong className="gold-text">{user.referralCode}</strong> — every
-          signup with it credits Rs 10 real money to your wallet (added as 10.00 to your
-          balance). Earned so far: <strong className="gold-text">Rs {d.referralEarned}</strong> (
+          signup with it credits {formatMoney(10, user.currency)} real money to your wallet (added as 10.00 to your
+          balance). Earned so far: <strong className="gold-text">{formatMoney(d.referralEarned, user.currency)}</strong> (
           {d.referrals.length} referrals).
         </p>
         <div className="mt-3 flex gap-2">
@@ -280,7 +307,7 @@ export function WalletPage() {
                 <span>
                   {r.name} ({r.email})
                 </span>
-                <span className="text-[var(--good)]">+Rs 10</span>
+                <span className="text-[var(--good)]">+{formatMoney(10, user.currency)}</span>
               </li>
             ))}
           </ul>
@@ -291,7 +318,7 @@ export function WalletPage() {
         <h2 className="font-serif text-2xl">Responsible Gaming Limits</h2>
         <form onSubmit={saveLimits} className="mt-3 grid gap-3 sm:grid-cols-3">
           <label className="block text-sm">
-            Daily deposit limit (USD, 0 = no limit)
+            Daily deposit limit ({user.currency}, 0 = no limit)
             <input
               type="number"
               min="0"
@@ -301,7 +328,7 @@ export function WalletPage() {
             />
           </label>
           <label className="block text-sm">
-            Daily loss limit (USD, 0 = no limit)
+            Daily loss limit ({user.currency}, 0 = no limit)
             <input
               type="number"
               min="0"
@@ -330,7 +357,7 @@ export function WalletPage() {
             {d.requests.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span>
-                  {r.kind} via {r.method} — {r.amount} {r.currency}
+                  {r.kind} via {r.method} — {formatMoney(r.amount, r.currency)}
                   {r.ref ? ` — ${r.ref}` : ""}
                   {r.status === "rejected" && r.rejectReason ? ` — ${r.rejectReason}` : ""}
                 </span>
@@ -364,7 +391,7 @@ export function WalletPage() {
                 </span>
                 <span className={l.amount >= 0 ? "text-[var(--good)]" : "text-[var(--danger)]"}>
                   {l.amount >= 0 ? "+" : ""}
-                  {l.amount.toFixed(2)} {l.currency}
+                  {formatMoney(l.amount, l.currency)}
                 </span>
               </li>
             ))}

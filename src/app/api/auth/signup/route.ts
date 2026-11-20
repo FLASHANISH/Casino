@@ -10,6 +10,7 @@ import {
   refCodeFor,
   setPlayerCookie,
 } from "@/lib/auth";
+import { countryByCode, currencyForCountry, formatMoney } from "@/lib/countries";
 import { err, json, parseBody } from "@/lib/api-helpers";
 
 const schema = z.object({
@@ -17,6 +18,7 @@ const schema = z.object({
   email: z.string().trim().email().max(120),
   password: z.string().min(6).max(72),
   dob: z.string().min(8).max(10),
+  country: z.string().trim().length(2),
   referralCode: z.string().trim().max(20).default(""),
 });
 
@@ -31,11 +33,16 @@ export async function POST(req: Request) {
   if (age < 18) return err("You must be 18 or older to register (KYC 18+).");
   if (age > 110) return err("Enter a valid date of birth.");
 
+  const countryCode = args.country.toUpperCase();
+  const country = countryByCode(countryCode);
+  if (!country) return err("Please pick a valid country from the list.");
+  const { currency } = currencyForCountry(countryCode);
+
   const email = args.email.toLowerCase();
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return err("An account with this email already exists. Please log in.");
 
-  let referrer: { id: number; balanceUsd: number; balanceUsdt: number } | null = null;
+  let referrer: { id: number; balanceUsd: number; balanceUsdt: number; currency: string } | null = null;
   const referralCodeInput = args.referralCode ?? "";
   if (referralCodeInput) {
     const all = await prisma.user.findMany();
@@ -47,7 +54,8 @@ export async function POST(req: Request) {
       ) ?? null;
   }
 
-  // New accounts start at $0.00 real money. There are no bonuses of any kind.
+  // New accounts start at 0.00 real money in their country's currency.
+  // There are no bonuses of any kind.
   const u = await prisma.user.create({
     data: {
       name: args.name,
@@ -55,6 +63,8 @@ export async function POST(req: Request) {
       passwordHash: await hashPassword(args.password),
       role: "player",
       dob: args.dob,
+      country: countryCode,
+      currency,
       kycStatus: "pending verification - 18+ confirmed",
       balanceUsd: 0,
       balanceUsdt: 0,
@@ -67,8 +77,9 @@ export async function POST(req: Request) {
     data: { referralCode },
   });
 
-  // Refer & Earn: Rs 10 real money to the referrer, instantly.
+  // Refer & Earn: 10 real money to the referrer, in the referrer's currency.
   if (referrer) {
+    const refCurrency = referrer.currency || "USD";
     const pools = applyDelta(referrer, 10);
     await prisma.user.update({ where: { id: referrer.id }, data: pools });
     await prisma.ledger.create({
@@ -76,8 +87,8 @@ export async function POST(req: Request) {
         userId: referrer.id,
         type: "referral",
         amount: 10,
-        currency: "INR",
-        note: `Referral reward: ${args.name} signed up with your code - Rs 10 real money`,
+        currency: refCurrency,
+        note: `Referral reward: ${args.name} signed up with your code - ${formatMoney(10, refCurrency)} real money`,
       },
     });
   }
@@ -97,6 +108,6 @@ export async function POST(req: Request) {
   return json({
     ok: true,
     verifyCode,
-    user: { id: u.id, name: u.name, email: u.email, referralCode },
+    user: { id: u.id, name: u.name, email: u.email, referralCode, country: countryCode, currency },
   });
 }

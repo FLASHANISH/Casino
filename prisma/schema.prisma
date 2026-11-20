@@ -32,6 +32,8 @@ model User {
   depositLimit  Float    @default(0)
   lossLimit     Float    @default(0)
   favorites     String   @default("")
+  country       String   @default("")
+  currency      String   @default("USD")
   createdAt     DateTime @default(now())
 
   @@map("users")
