@@ -1,9 +1,40 @@
-.gitignore
-node_modules/
-app.db*
-audits/
-client/dist/
-client/dist-cvm/
-server/dist/
-.bun-cache/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
 *.tsbuildinfo
+next-env.d.ts
+
+# owner-only setup note — never publish to a public repo
+OWNER-SETUP.md
+
+# local database (dev only, if you ever use sqlite locally)
+*.db
+*.db-shm
+*.db-wal

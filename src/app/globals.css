@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: #07070b;
+  --surface: #101018;
+  --surface2: #17171f;
+  --text: #f5efe0;
+  --dim: #a49a83;
+  --border: #2b2b38;
+  --accent: #c9a227;
+  --accent2: #f0d47a;
+  --danger: #e07a7a;
+  --good: #7fd08c;
+  --radius: 14px;
+}
+
+@layer base {
+  button,
+  [role="button"],
+  select,
+  summary,
+  input:not([type="checkbox"], [type="radio"]) {
+    min-height: 2.25rem;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+  }
+  input,
+  select,
+  textarea {
+    color-scheme: dark;
+  }
+}
+
+.felt {
+  background: radial-gradient(120% 90% at 50% 0%, #1a1a26 0%, #0b0b12 55%, #07070b 100%);
+}
+.gold-text {
+  color: var(--accent2);
+}
+.glass {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(240, 212, 122, 0.22);
+  backdrop-filter: blur(14px);
+  border-radius: var(--radius);
+}
+@keyframes dealIn {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) rotate(-4deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes popIn {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes spinWheel {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(1440deg);
+  }
+}
+.deal-in {
+  animation: dealIn 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.pop-in {
+  animation: popIn 0.35s ease both;
+}
+.wheel-spin {
+  animation: spinWheel 2.4s cubic-bezier(0.15, 0.8, 0.25, 1) both;
+}
+.chip {
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.playing-card {
+  background: linear-gradient(145deg, #fffdf5, #efe8d2);
+  color: #1c1c22;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+@media (prefers-reduced-motion: reduce) {
+  .deal-in,
+  .pop-in,
+  .wheel-spin {
+    animation: none;
+  }
+}
