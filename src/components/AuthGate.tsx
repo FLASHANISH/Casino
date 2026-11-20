@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/client";
+import { COUNTRIES, DEFAULT_COUNTRY, currencyForCountry, formatMoney } from "@/lib/countries";
 
 // First page: Login / Create Account ONLY. Logged-out visitors see nothing
 // else — no lobby, no games, no sportsbook. After login the dashboard opens.
@@ -15,6 +16,7 @@ export function AuthGate() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [dob, setDob] = useState("");
+  const [country, setCountry] = useState(DEFAULT_COUNTRY);
   const [referralCode, setReferralCode] = useState(ref);
   const [err, setErr] = useState("");
   const [note, setNote] = useState("");
@@ -36,6 +38,7 @@ export function AuthGate() {
           email,
           password,
           dob,
+          country,
           referralCode,
         });
         setNote(
@@ -142,7 +145,27 @@ export function AuthGate() {
                   />
                 </label>
                 <label className="block text-sm">
-                  Referral code (optional — get Rs 10 for your referrer)
+                  Country
+                  <select
+                    required
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-[var(--border)] bg-black/50 px-3 py-2"
+                  >
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name} ({c.currency})
+                      </option>
+                    ))}
+                  </select>
+                  <span className="mt-1 block text-xs text-[var(--dim)]">
+                    Wallet currency: {currencyForCountry(country).symbol}{" "}
+                    {currencyForCountry(country).currency} — deposits and withdraws are in
+                    this currency.
+                  </span>
+                </label>
+                <label className="block text-sm">
+                  Referral code (optional — your referrer earns 10.00 in their currency)
                   <input
                     value={referralCode}
                     onChange={(e) => setReferralCode(e.target.value)}
@@ -171,7 +194,7 @@ export function AuthGate() {
                 ? "Please wait..."
                 : tab === "login"
                   ? "Log in"
-                  : "Create Account — start at $0.00"}
+                  : `Create Account — start at ${formatMoney(0, currencyForCountry(country).currency)}`}
             </button>
           </form>
 
@@ -214,8 +237,11 @@ export function AuthGate() {
           )}
 
           <p className="mt-4 text-center text-xs leading-relaxed text-[var(--dim)]">
-            18+ only. Real money — no demo coins, no bonuses. New accounts start at
-            $0.00. By creating an account you agree to the Terms and confirm you are
+            18+ only. Real money — no demo coins, no bonuses. New accounts start at{" "}
+            {tab === "signup"
+              ? formatMoney(0, currencyForCountry(country).currency)
+              : "$0.00"}
+            . By creating an account you agree to the Terms and confirm you are
             18 or older.
           </p>
         </div>

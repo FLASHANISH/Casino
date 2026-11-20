@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { api, credits, type AppState } from "@/lib/client";
+import { api, type AppState } from "@/lib/client";
+import { formatMoney } from "@/lib/countries";
 
 const NAV: [string, string][] = [
   ["/lobby", "Lobby"],
@@ -62,7 +63,7 @@ export function Shell({
                   <p className="mt-2 text-[var(--dim)]">{state?.settings["tournament_note"] || ""}</p>
                   <p className="mt-2 text-[var(--dim)]">
                     {user
-                      ? `Refer & Earn: share your code ${user.referralCode} - you get Rs 10 real money (credited as 10.00 in your wallet balance) for every signup. See Wallet.`
+                      ? `Refer & Earn: share your code ${user.referralCode} - you get ${formatMoney(10, user.currency)} real money (credited as 10.00 in your wallet balance) for every signup. See Wallet.`
                       : "Log in to deposit real money via UPI or USDT."}
                   </p>
                 </div>
@@ -78,7 +79,7 @@ export function Shell({
                     REAL BALANCE - REAL MONEY
                   </span>
                   <span className="block font-serif leading-none gold-text">
-                    {credits(user.balance)}
+                    {formatMoney(user.balance, user.currency)}
                   </span>
                 </Link>
                 <Link

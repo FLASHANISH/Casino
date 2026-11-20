@@ -87,6 +87,8 @@ export type SessionUser = {
   depositLimit: number;
   lossLimit: number;
   favorites: string;
+  country: string;
+  currency: string;
 };
 
 export async function userFromToken(

@@ -35,6 +35,8 @@ export type PublicUser = {
   referralCode: string;
   depositLimit: number;
   lossLimit: number;
+  country: string;
+  currency: string;
 };
 
 export function pubUser(u: SessionUser): PublicUser {
@@ -52,6 +54,8 @@ export function pubUser(u: SessionUser): PublicUser {
     referralCode: u.referralCode,
     depositLimit: u.depositLimit,
     lossLimit: u.lossLimit,
+    country: u.country || "",
+    currency: u.currency || "USD",
   };
 }
 
