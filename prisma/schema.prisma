@@ -1,0 +1,168 @@
+// Quvanta — Prisma schema (PostgreSQL).
+// Ported 1:1 from the hosted build's Drizzle/SQLite tables
+// (drizzle/0001-0007). Money is stored as Float, matching the original
+// `real` columns; every movement is a Ledger row and a balance can
+// never go negative (enforced in the API layer).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String   @default("")
+  email         String   @unique
+  username      String   @default("")
+  passwordHash  String   @default("")
+  role          String   @default("player")
+  dob           String   @default("")
+  kycStatus     String   @default("pending verification - 18+ confirmed")
+  balanceUsd    Float    @default(0)
+  balanceUsdt   Float    @default(0)
+  suspended     Boolean  @default(false)
+  verifyCode    String   @default("")
+  resetCode     String   @default("")
+  referralCode  String   @default("")
+  referredBy    Int      @default(0)
+  depositLimit  Float    @default(0)
+  lossLimit     Float    @default(0)
+  favorites     String   @default("")
+  createdAt     DateTime @default(now())
+
+  @@map("users")
+}
+
+model Session {
+  token     String   @id
+  userId    Int
+  kind      String   @default("player")
+  createdAt DateTime @default(now())
+
+  @@map("sessions")
+}
+
+model Wallet {
+  id          Int    @id @default(autoincrement())
+  balanceUsd  Float  @default(0)
+  balanceUsdt Float  @default(0)
+  kycStatus   String @default("verified")
+  username    String @default("player")
+
+  @@map("wallet")
+}
+
+model Ledger {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  amount    Float
+  currency  String   @default("USD")
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  @@map("ledger")
+}
+
+model Bet {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  game      String
+  betAmount Float
+  payout    Float
+  profit    Float
+  detail    String   @default("")
+  fairHash  String   @default("")
+  createdAt DateTime @default(now())
+
+  @@map("bets")
+}
+
+model SportsBet {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  fixtureLabel String
+  pick         String
+  odds         Float
+  stake        Float
+  potential    Float
+  status       String   @default("open")
+  createdAt    DateTime @default(now())
+
+  @@map("sports_bets")
+}
+
+model MoneyRequest {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  kind         String
+  method       String
+  amount       Float
+  currency     String   @default("USD")
+  ref          String   @default("")
+  rejectReason String   @default("")
+  destination  String   @default("")
+  screenshotRef String  @default("")
+  status       String   @default("pending")
+  createdAt    DateTime @default(now())
+
+  @@map("requests")
+}
+
+model GameConfig {
+  slug        String @id
+  name        String
+  category    String @default("Originals")
+  enabled     Boolean @default(true)
+  minBet      Float  @default(1)
+  maxBet      Float  @default(500)
+  rtp         Float  @default(97)
+  plays       Int    @default(0)
+  description String @default("")
+  engine      String @default("slots")
+  tag         String @default("")
+  hue         Int    @default(45)
+
+  @@map("games_config")
+}
+
+model Fixture {
+  id       Int     @id @default(autoincrement())
+  team1    String
+  team2    String
+  venue    String  @default("")
+  startsAt String  @default("")
+  odds1    Float
+  odds2    Float
+  isDemo   Boolean @default(true)
+  league   String  @default("IPL")
+  sport    String  @default("Cricket")
+
+  @@map("fixtures")
+}
+
+model Setting {
+  key   String @id
+  value String @default("")
+
+  @@map("settings")
+}
+
+model Tenant {
+  id          Int      @id @default(autoincrement())
+  name        String
+  domain      String   @default("")
+  currency    String   @default("USD")
+  commission  Float    @default(15)
+  monthlyRent Float    @default(750)
+  model       String   @default("rent")
+  status      String   @default("active")
+  color       String   @default("#0C2B1E")
+  createdAt   DateTime @default(now())
+
+  @@map("tenants")
+}
